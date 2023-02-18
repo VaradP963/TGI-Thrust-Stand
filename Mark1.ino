@@ -177,6 +177,68 @@ Serial.println("Selected BLDC Motor mode!");
 //////////////////////////////////////////////// ROCKET MOTOR THRUST CALCULATION MODE/////////////////////////////////
 void Rocket Motor(){
 Serial.println("Selected Rocket Motor mode!");
+  
+// Read data from sensors
+  float Thrust = readThrust();
+  
+  // Update OLED display with battery level and recording status
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.print("Thrust: ");
+  display.print(readThrust());
+  display.print("g");
+  
+  if (recording) {
+    display.setCursor(0, 16);
+    display.print("Recording...");
+  }
+  display.display();
+
+  // Check if button is pressed to toggle recording
+  if (digitalRead(buttonPin) == LOW) {
+    recording = !recording;
+    delay(200);
+  }
+    
+  if (recording) {
+// open file for writing
+  myFile = SD.open(FILE_NAME, FILE_WRITE);
+
+  if (myFile) {
+    Serial.println(F("Writing log to SD Card"));
+
+    // write timestamp
+    DateTime now = rtc.now();
+    myFile.print(now.year(), DEC);
+    myFile.print('-');
+    myFile.print(now.month(), DEC);
+    myFile.print('-');
+    myFile.print(now.day(), DEC);
+    myFile.print(' ');
+    myFile.print(now.hour(), DEC);
+    myFile.print(':');
+    myFile.print(now.minute(), DEC);
+    myFile.print(':');
+    myFile.print(now.second(), DEC);
+
+    myFile.print("  "); // delimiter between timestamp and data
+
+    // write data
+    myFile.print("Thrust =");
+    myFile.print(Thrust);
+
+    myFile.write("\n"); // new line
+
+    myFile.close();
+  } 
+  else {
+    Serial.print(F("SD Card: error on opening file "));
+    Serial.println(FILE_NAME);
+  }
+  delay(2000);  
+  }
+  }
+
 }
 
 ////////////////////////////////////////////////// Void Loop ////////////////////////////////////////////////////////
